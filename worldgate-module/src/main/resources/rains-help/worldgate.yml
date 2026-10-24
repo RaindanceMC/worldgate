@@ -1,0 +1,37 @@
+id: worldgate
+title: Nether and End access
+summary: Why a portal sometimes refuses you, what "drained" and "closed" mean, and how to check.
+intro: |
+  Portals are not guaranteed. The owners can shut the Nether or the End — for an event, a world reset, or simply because they feel like it. Here is how you tell what is going on.
+icon: NETHER_PORTAL
+category: Worlds
+order: 30
+module: worldgate
+aliases: [nether, end, portal, portals, dimensions, wgate, locked, drained]
+keywords: [closed, locked, enter, refused, evacuate, dimension, the-end]
+commands: [worldgate]
+related: [worldgate-admin]
+sections:
+  - question: Can I go to the Nether and the End?
+    title: Is it open?
+    text: |
+      Usually, yes. Type {run:/worldgate status} and I tell you at once whether the Nether and the End are <white>OPEN</white>, <white>DRAINED</white> or <white>CLOSED</white>.
+      Which worlds those are is set by the owners: the Nether is <white>{setting:worldgate:nether-world}</white> and the End is <white>{setting:worldgate:end-world}</white>.
+  - question: What does "drained" mean?
+    title: Drained
+    text: |
+      The dimension is winding down: nobody <i>new</i> may enter, but whoever is already inside may walk out any time. Staff use it before a reset, so the dimension empties by itself. It is temporary — come back later.
+  - question: What does "closed" mean?
+    title: Closed
+    text: |
+      Same door rule as drained — no new arrivals — but the message reads as a policy: this dimension is closed on this server for the foreseeable future. It stays that way until staff open it again.
+  - question: A portal does nothing. Why?
+    title: Refused portals
+    text: |
+      If the destination is drained or closed, the portal is cancelled and you get a line saying so. That goes for nether portals, end portals — and also for commands that would take you there directly, like a warp or a world-teleport: they meet the same door.
+      Going <i>back</i> out of a locked dimension is never blocked.
+  - question: What if I'm inside when it locks?
+    title: Evacuation
+    text: |
+      You can leave on your own, of course. If staff want everybody out at once they evacuate the dimension: you are told "You have been pulled out", and you are moved to your bed or respawn point in the overworld if it is in the overworld, and to the overworld's spawn otherwise (a bed in the Nether would only send you straight back, and that is not the point).
+      {if:@perm:rainsworldgate.bypass}You hold the bypass, so no door is ever shut to you.{/if}

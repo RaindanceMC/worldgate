@@ -1,0 +1,37 @@
+id: worldgate-admin
+title: Locking the Nether and the End
+summary: Staff — lock, drain, close, open and evacuate a dimension, and who may walk through anyway.
+intro: |
+  Staff business. Three states per dimension, one command, and no surprises — I am rather proud of that last part.
+icon: OBSIDIAN
+category: Staff
+order: 60
+module: worldgate
+permission: rainsworldgate.admin
+aliases: [lock-nether, lock-end, evacuate]
+keywords: [lock, drain, close, open, evacuate, bypass, nether, end, reset]
+related: [worldgate]
+sections:
+  - question: What states are there?
+    title: States
+    text: |
+      <white>OPEN</white>: normal. <white>DRAINED</white>: no new arrivals, players inside may leave — for winding down before a reset. <white>CLOSED</white>: same rule, but the message tells players it is closed for good. The state is saved at once and survives restarts.
+  - question: How do I lock or open one?
+    title: Lock and open
+    text: |
+      {cmd:/worldgate lock <nether|end> <drain|close>} locks one dimension.
+      {cmd:/worldgate open <nether|end>} opens it again.
+      {cmd:/worldgate status} shows both. If the state cannot be written to disk, nothing changes and you are told so — the server never claims a lock that a restart would forget.
+  - question: How do I clear everybody out?
+    title: Evacuating
+    text: |
+      {cmd:/worldgate evacuate <nether|end>} pulls every player in that dimension back to the overworld ({setting:worldgate:overworld-world}) and replies with how many were moved. Players go to their own respawn point if it lies in the overworld, otherwise to its spawn.
+      Locking and evacuating are two separate commands on purpose: locking moves nobody, evacuating locks nothing. Want both? Run both.
+  - question: Who walks through a locked door?
+    title: Bypass
+    text: |
+      Holders of <white>rainsworldgate.bypass</white> (operators by default) are never blocked, in either direction. Everybody can read the status (<white>rainsworldgate.status</white>); changing anything needs <white>rainsworldgate.admin</white>.
+  - question: Which worlds does it guard?
+    title: World names
+    text: |
+      By the names in the settings: Nether <white>{setting:worldgate:nether-world}</white>, End <white>{setting:worldgate:end-world}</white>, evacuation target <white>{setting:worldgate:overworld-world}</white>. Change them in {run:/settings} on a server that renamed its worlds. Any other world and portal is left strictly alone.
