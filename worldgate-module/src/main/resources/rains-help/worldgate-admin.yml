@@ -25,7 +25,7 @@ sections:
   - question: How do I open one at a set time?
     title: Scheduled opening
     text: |
-      {cmd:/worldgate schedule <nether|end> <time>} closes it now and opens it by itself at that time, written like <white>2026-11-24T16:00</white> (German time). Players turned away are told when it opens; when it does, everybody online hears so. A server that was down at the time opens it within half a minute of starting.
+      {cmd:/worldgate schedule <nether|end> <time>} closes it now and opens it by itself at that time, written like <white>2026-11-24T16:00</white> (German time). Players turned away are told when it opens. Everybody online gets a countdown: a reminder a day, an hour, ten and one minute before, a boss bar for the last ten minutes, the last ten seconds as a title, and a title with a fanfare when it opens. A server that was down at the time opens it within half a minute of starting.
       Opening or locking it by hand cancels the schedule.
   - question: How do I clear everybody out?
     title: Evacuating

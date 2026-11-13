@@ -8,6 +8,7 @@ import de.raindancer.modules.worldgate.model.GateState;
 import de.raindancer.modules.worldgate.model.GateStates;
 import de.raindancer.modules.worldgate.model.OpeningTime;
 import de.raindancer.modules.worldgate.model.Openings;
+import de.raindancer.modules.worldgate.opening.OpeningAnnouncer;
 import de.raindancer.core.world.time.Times;
 import de.raindancer.modules.worldgate.rules.GateRule;
 import de.raindancer.modules.worldgate.store.GateStateStore;
@@ -93,6 +94,10 @@ public final class WorldGateService implements IWorldGateService {
         return write(dimension, states.with(dimension, GateState.CLOSED), openings.with(dimension, at));
     }
 
+    public Openings openings() {
+        return openings;
+    }
+
     public Optional<Instant> opensAt(Dimension dimension) {
         return openings.of(dimension);
     }
@@ -167,7 +172,7 @@ public final class WorldGateService implements IWorldGateService {
     public Refusal refusalLine(Dimension dimension, GateState state, Instant now) {
         Optional<Instant> at = state == GateState.CLOSED ? opensAt(dimension) : Optional.empty();
         if (at.isPresent()) {
-            return new Refusal("worldgate.opens-entry-denied", new Object[]{"dimension", dimension.label(),
+            return new Refusal("worldgate.opens-entry-denied", new Object[]{"dimension", OpeningAnnouncer.branded(dimension),
                     "when", OpeningTime.when(at.get()), "remaining", Times.describe(Duration.between(now, at.get()))});
         }
         return new Refusal(state == GateState.CLOSED ? "worldgate.closed-entry-denied" : "worldgate.drained-entry-denied",

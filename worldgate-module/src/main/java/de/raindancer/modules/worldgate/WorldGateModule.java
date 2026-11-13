@@ -13,6 +13,8 @@ import de.raindancer.modules.worldgate.model.OpeningTime;
 import de.raindancer.core.platform.util.Scheduling;
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import de.raindancer.modules.worldgate.rules.GateRule;
+import de.raindancer.modules.worldgate.opening.OpeningAnnouncer;
+import de.raindancer.modules.worldgate.opening.OpeningCountdown;
 import de.raindancer.modules.worldgate.service.WorldGateService;
 import de.raindancer.modules.worldgate.store.GateStateStore;
 import de.raindancer.modules.worldgate.util.PermissionNodes;
@@ -40,12 +42,10 @@ import java.util.List;
  */
 public final class WorldGateModule implements FlexModule {
 
-    private static final ModuleInfo INFO = ModuleInfo.of("worldgate", "World Gate", "1.6.1")
+    private static final ModuleInfo INFO = ModuleInfo.of("worldgate", "World Gate", "1.7.0")
             .describedAs("Locks, drains or closes the Nether and the End to entry, and evacuates "
                     + "whoever is still inside")
             .by("Raindancer118");
-
-    private static final long OPEN_CHECK_TICKS = 20L * 30;
 
     private LogChannel log;
     private SettingsStore<WorldGateSettings> settings;
@@ -99,16 +99,22 @@ public final class WorldGateModule implements FlexModule {
 
         // A scheduled opening (a launch keeping the Nether shut for a few days) happens here, on the
         // first check after its time, so one missed while the server was down is not missed for good.
-        // The write goes to the database, so it is done off the world's thread; only the cheap check runs on it.
-        ScheduledTask opener = Scheduling.globalTimer(context.plugin(), 20L, OPEN_CHECK_TICKS, task -> {
+        // Once a second: the countdown's last seconds are titles. The opening writes to the database, so
+        // it is done off the world's thread; only the in-memory checks run on it.
+        OpeningCountdown countdown = new OpeningCountdown();
+        OpeningAnnouncer announcer = new OpeningAnnouncer(server, messages, context.core().effects(),
+                context.core().bossBars());
+        ScheduledTask opener = Scheduling.globalTimer(context.plugin(), 20L, 20L, task -> {
             Instant now = Instant.now();
+            announcer.show(countdown.step(gate.openings(), now), gate);
             if (!gate.anyDue(now)) {
                 return;
             }
             Scheduling.async(context.plugin(), () -> {
                 List<Dimension> opened = gate.openDue(now);
                 if (!opened.isEmpty()) {
-                    Scheduling.global(context.plugin(), () -> announce(server, messages, opened));
+                    opened.forEach(dimension -> log.info("{} opened as scheduled.", dimension.label()));
+                    Scheduling.global(context.plugin(), () -> announcer.opened(opened));
                 }
             });
         });
@@ -124,14 +130,6 @@ public final class WorldGateModule implements FlexModule {
         log.info("World Gate is up: the Nether is {}{}, the End is {}{}.",
                 gate.state(Dimension.NETHER), opening(Dimension.NETHER),
                 gate.state(Dimension.END), opening(Dimension.END));
-    }
-
-    private void announce(Server server, Messages messages, List<Dimension> opened) {
-        for (Dimension dimension : opened) {
-            log.info("{} opened as scheduled.", dimension.label());
-            server.getOnlinePlayers().forEach(player ->
-                    messages.send(player, "worldgate.opened-now", "dimension", dimension.label()));
-        }
     }
 
     private String opening(Dimension dimension) {

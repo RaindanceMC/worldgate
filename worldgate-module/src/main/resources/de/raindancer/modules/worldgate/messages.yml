@@ -15,8 +15,14 @@ worldgate:
 
   drained-entry-denied: "<yellow><white><dimension></white> is being drained right now, so nobody new may enter. Come back later."
   closed-entry-denied: "<red><white><dimension></white> is closed on this server."
-  opens-entry-denied: "<yellow><white><dimension></white> opens on <white><when></white>, in <white><remaining></white>."
-  opened-now: "<green><white><dimension></white> is open now. Off you go!"
+  opens-entry-denied: "<dimension> <gray>opens on <white><when></white>, in <white><remaining></white>."
+  opened-now: "<dimension> <gray>is open now. Off you go!"
+  opened-title: "<bold><dimension></bold>"
+  opened-subtitle: "<gray>is open now. Off you go!"
+  countdown-reminder: "<dimension> <gray>opens in <white><remaining></white>, on <white><when></white>."
+  countdown-bar: "<dimension> <gray>opens in <white><bold><clock></bold></white>"
+  countdown-title: "<white><bold><seconds></bold></white>"
+  countdown-subtitle: "<dimension> <gray>opens in"
   evacuate-notice: "<yellow>You have been pulled out of <white><dimension></white>."
 
   no-permission: "<red>You may not lock, open or evacuate a dimension. That is staff business."
