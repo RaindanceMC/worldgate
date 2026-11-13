@@ -15,7 +15,7 @@ Needs Java 25 and read access to `packages.tstieh.de` (server ids `packages-rele
 
 ## Plugins
 
-- `worldgate-standalone/target/RainsWorldGate-1.7.0.jar` — also published as `de.raindancer.modules:worldgate-standalone:1.7.0`
+- `worldgate-standalone/target/RainsWorldGate-1.8.0.jar` — also published as `de.raindancer.modules:worldgate-standalone:1.8.0`
 
 ## Versions
 

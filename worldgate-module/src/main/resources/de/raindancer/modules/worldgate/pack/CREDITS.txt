@@ -1,0 +1,8 @@
+Music (both CC0 / public domain, no attribution required; credited with thanks)
+
+sounds/music/nether.ogg  "Ancient Power Of Serpents" by Kevin MacLeod
+                         https://opengameart.org/content/ancient-power-of-serpents (via freepd.com), CC0
+sounds/music/end.ogg     "Fantasy Choir 1" from "Fantasy Choir - 3 orchestral pieces" by César da Rocha (cesisco)
+                         https://opengameart.org/content/fantasy-choir-3-orchestral-pieces, CC0
+
+Both converted to Ogg Vorbis (q4, 44.1 kHz stereo) and loudness-normalised to -16 LUFS.

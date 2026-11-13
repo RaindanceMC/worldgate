@@ -19,6 +19,7 @@ worldgate:
   opened-now: "<dimension> <gray>is open now. Off you go!"
   opened-title: "<bold><dimension></bold>"
   opened-subtitle: "<gray>is open now. Off you go!"
+  now-playing: "<gray>♪ <white><title></white> <dark_gray>·</dark_gray> <gray><by>"
   countdown-reminder: "<dimension> <gray>opens in <white><remaining></white>, on <white><when></white>."
   countdown-bar: "<dimension> <gray>opens in <white><bold><clock></bold></white>"
   countdown-title: "<white><bold><seconds></bold></white>"

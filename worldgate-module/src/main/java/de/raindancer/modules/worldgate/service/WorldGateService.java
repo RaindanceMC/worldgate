@@ -22,6 +22,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.OptionalLong;
 
 /**
  * Whether the Nether and the End are open, and pulling everybody out of one.
@@ -48,6 +49,7 @@ public final class WorldGateService implements IWorldGateService {
 
     private volatile GateStates states = GateStates.ALL_OPEN;
     private volatile Openings openings = Openings.NONE;
+    private volatile Openings opened = Openings.NONE;
     private volatile WorldGateSettings settings;
 
     public WorldGateService(GateStateStore store, LogChannel log, Messages messages,
@@ -62,6 +64,7 @@ public final class WorldGateService implements IWorldGateService {
     public void load() {
         states = store.load();
         openings = store.loadOpenings();
+        opened = store.loadOpened();
     }
 
     @Override
@@ -86,12 +89,12 @@ public final class WorldGateService implements IWorldGateService {
      */
     public synchronized boolean set(Dimension dimension, GateState state) {
         // Changed by hand, the schedule is over: otherwise a dimension locked again would reopen at the old time.
-        return write(dimension, states.with(dimension, state), openings.with(dimension, null));
+        return write(dimension, states.with(dimension, state), openings.with(dimension, null), opened);
     }
 
     /** Closes a dimension now and opens it by itself at {@code at}. @return whether it reached disk */
     public synchronized boolean schedule(Dimension dimension, Instant at) {
-        return write(dimension, states.with(dimension, GateState.CLOSED), openings.with(dimension, at));
+        return write(dimension, states.with(dimension, GateState.CLOSED), openings.with(dimension, at), opened);
     }
 
     public Openings openings() {
@@ -115,21 +118,45 @@ public final class WorldGateService implements IWorldGateService {
 
     /** Opens every dimension whose time has come — also one missed while the server was down. */
     public synchronized List<Dimension> openDue(Instant now) {
-        List<Dimension> opened = new ArrayList<>();
+        List<Dimension> done = new ArrayList<>();
         for (Dimension dimension : Dimension.values()) {
             Optional<Instant> at = openings.of(dimension);
-            if (at.isPresent() && !now.isBefore(at.get()) && set(dimension, GateState.OPEN)) {
-                opened.add(dimension);
+            if (at.isPresent() && !now.isBefore(at.get()) && write(dimension, states.with(dimension, GateState.OPEN),
+                    openings.with(dimension, null), opened.with(dimension, at.get()))) {
+                done.add(dimension);
             }
         }
-        return opened;
+        return done;
     }
 
-    private synchronized boolean write(Dimension dimension, GateStates updated, Openings updatedOpenings) {
-        boolean written = store.save(updated, updatedOpenings);
+    /** When this dimension last opened on its schedule; empty for one never scheduled or only opened by hand. */
+    public Optional<Instant> openedAt(Dimension dimension) {
+        return opened.of(dimension);
+    }
+
+    /**
+     * Whether somebody entering {@code dimension} now is on their first visit since its opening, and so hears its
+     * music.
+     *
+     * @param heard the opening they last heard the music for (epoch millis), as kept on the player
+     * @return what to keep on them from now on, when it plays; empty when it does not
+     */
+    public OptionalLong firstVisit(Dimension dimension, OptionalLong heard) {
+        Optional<Instant> at = openedAt(dimension);
+        if (at.isEmpty() || state(dimension) != GateState.OPEN) {
+            return OptionalLong.empty();
+        }
+        long opening = at.get().toEpochMilli();
+        return heard.isPresent() && heard.getAsLong() == opening ? OptionalLong.empty() : OptionalLong.of(opening);
+    }
+
+    private synchronized boolean write(Dimension dimension, GateStates updated, Openings updatedOpenings,
+                                       Openings updatedOpened) {
+        boolean written = store.save(updated, updatedOpenings, updatedOpened);
         if (written) {
             states = updated;
             openings = updatedOpenings;
+            opened = updatedOpened;
         } else {
             log.error("Could not write {}'s new state to disk, so it is left as {}.",
                     dimension.label(), states.of(dimension));

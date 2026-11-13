@@ -1,0 +1,8 @@
+{
+  "music.nether": {
+    "sounds": [{"name": "rainsworldgate:music/nether", "stream": true}]
+  },
+  "music.end": {
+    "sounds": [{"name": "rainsworldgate:music/end", "stream": true}]
+  }
+}

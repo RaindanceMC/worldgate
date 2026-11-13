@@ -13,7 +13,9 @@ import de.raindancer.modules.worldgate.model.OpeningTime;
 import de.raindancer.core.platform.util.Scheduling;
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import de.raindancer.modules.worldgate.rules.GateRule;
+import de.raindancer.modules.worldgate.opening.FirstVisitMusic;
 import de.raindancer.modules.worldgate.opening.OpeningAnnouncer;
+import de.raindancer.modules.worldgate.pack.WorldGatePack;
 import de.raindancer.modules.worldgate.opening.OpeningCountdown;
 import de.raindancer.modules.worldgate.service.WorldGateService;
 import de.raindancer.modules.worldgate.store.GateStateStore;
@@ -42,7 +44,7 @@ import java.util.List;
  */
 public final class WorldGateModule implements FlexModule {
 
-    private static final ModuleInfo INFO = ModuleInfo.of("worldgate", "World Gate", "1.7.0")
+    private static final ModuleInfo INFO = ModuleInfo.of("worldgate", "World Gate", "1.8.0")
             .describedAs("Locks, drains or closes the Nether and the End to entry, and evacuates "
                     + "whoever is still inside")
             .by("Raindancer118");
@@ -86,6 +88,9 @@ public final class WorldGateModule implements FlexModule {
 
         GateRule rule = new GateRule();
         context.listener(new WorldGatePortalListener(gate, rule, context.core().messages()));
+        context.listener(new FirstVisitMusic(context.plugin(), gate, context.core().messages()));
+        WorldGatePack.contribute(context.plugin(), context.core(), log);
+        context.closeWith(() -> WorldGatePack.withdraw(context.core()));
 
         // Portals are only one way in. Registered with Core so anything that teleports by command — a
         // world switcher, a home, a warp — asks the same question and meets the same closed door,

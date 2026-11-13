@@ -64,22 +64,35 @@ public final class GateStateStore {
                 readTime(yaml.getString("end-opens-at"), Dimension.END));
     }
 
-    /** Writes both states and keeps whatever openings are on disk. @return whether it reached the disk */
+    /** When each dimension last opened on its schedule — what a first visit is counted from. */
+    public Openings loadOpened() {
+        YamlConfiguration yaml = store.read();
+        return new Openings(readTime(yaml.getString("nether-opened-at"), Dimension.NETHER),
+                readTime(yaml.getString("end-opened-at"), Dimension.END));
+    }
+
+    /** Writes both states and keeps whatever times are on disk. @return whether it reached the disk */
     public boolean save(GateStates states) {
-        return save(states, loadOpenings());
+        return save(states, loadOpenings(), loadOpened());
     }
 
     /** Writes everything. @return whether it reached the disk */
-    public boolean save(GateStates states, Openings openings) {
-        if (states == null || openings == null) {
+    public boolean save(GateStates states, Openings openings, Openings opened) {
+        if (states == null || openings == null || opened == null) {
             return false;
         }
         return store.write(yaml -> {
             yaml.set("nether", states.nether().name());
             yaml.set("end", states.end().name());
-            yaml.set("nether-opens-at", openings.nether() == null ? null : openings.nether().toString());
-            yaml.set("end-opens-at", openings.end() == null ? null : openings.end().toString());
+            yaml.set("nether-opens-at", text(openings.nether()));
+            yaml.set("end-opens-at", text(openings.end()));
+            yaml.set("nether-opened-at", text(opened.nether()));
+            yaml.set("end-opened-at", text(opened.end()));
         });
+    }
+
+    private static String text(Instant at) {
+        return at == null ? null : at.toString();
     }
 
     private static Instant readTime(String text, Dimension dimension) {
