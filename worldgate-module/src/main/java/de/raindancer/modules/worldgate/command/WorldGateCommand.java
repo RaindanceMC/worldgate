@@ -4,14 +4,17 @@ import de.raindancer.core.platform.command.MistypedCommand;
 import de.raindancer.modules.worldgate.WorldGateServices;
 import de.raindancer.modules.worldgate.model.Dimension;
 import de.raindancer.modules.worldgate.model.GateState;
+import de.raindancer.modules.worldgate.model.OpeningTime;
 import de.raindancer.modules.worldgate.util.PermissionNodes;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 
+import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 /**
@@ -27,7 +30,7 @@ import java.util.function.Supplier;
  */
 public final class WorldGateCommand implements IWorldGateCommand {
 
-    private static final List<String> ADMIN_SUBCOMMANDS = List.of("status", "lock", "open", "evacuate");
+    private static final List<String> ADMIN_SUBCOMMANDS = List.of("status", "lock", "open", "schedule", "evacuate");
     private static final List<String> DIMENSIONS = List.of("nether", "end");
     private static final List<String> LOCK_MODES = List.of("drain", "close");
 
@@ -54,6 +57,7 @@ public final class WorldGateCommand implements IWorldGateCommand {
             case "status" -> status(live, sender);
             case "lock" -> lock(live, sender, args);
             case "open" -> open(live, sender, args);
+            case "schedule" -> schedule(live, sender, args);
             case "evacuate" -> evacuate(live, sender, args);
             default -> {
                 if (!MistypedCommand.subcommand(sender, "worldgate", args, 0, suggest(source, new String[]{""}))) {
@@ -66,9 +70,17 @@ public final class WorldGateCommand implements IWorldGateCommand {
     private void status(WorldGateServices live, CommandSender sender) {
         live.messages().send(sender, "worldgate.status-heading");
         for (Dimension dimension : Dimension.values()) {
-            live.messages().sendPlain(sender, "worldgate.status-row",
-                    "dimension", dimension.label(),
-                    "state", live.gate().state(dimension).name());
+            Optional<Instant> at = live.gate().opensAt(dimension);
+            if (at.isPresent()) {
+                live.messages().sendPlain(sender, "worldgate.status-row-scheduled",
+                        "dimension", dimension.label(),
+                        "state", live.gate().state(dimension).name(),
+                        "when", OpeningTime.when(at.get()));
+            } else {
+                live.messages().sendPlain(sender, "worldgate.status-row",
+                        "dimension", dimension.label(),
+                        "state", live.gate().state(dimension).name());
+            }
         }
     }
 
@@ -123,6 +135,38 @@ public final class WorldGateCommand implements IWorldGateCommand {
             return;
         }
         live.messages().send(sender, "worldgate.now-open", "dimension", dimension.label());
+    }
+
+    /** Closes a dimension now and opens it by itself at a time (German time unless it carries an offset). */
+    private void schedule(WorldGateServices live, CommandSender sender, String[] args) {
+        if (!sender.hasPermission(PermissionNodes.ADMIN)) {
+            live.messages().send(sender, "worldgate.no-permission");
+            return;
+        }
+        if (args.length < 3) {
+            live.messages().send(sender, "worldgate.usage.schedule");
+            return;
+        }
+        Dimension dimension = Dimension.parse(args[1]).orElse(null);
+        if (dimension == null) {
+            live.messages().send(sender, "worldgate.unknown-dimension", "value", args[1]);
+            return;
+        }
+        Instant at = OpeningTime.parse(args[2]).orElse(null);
+        if (at == null) {
+            live.messages().send(sender, "worldgate.unknown-time", "value", args[2]);
+            return;
+        }
+        if (!at.isAfter(Instant.now())) {
+            live.messages().send(sender, "worldgate.time-passed", "when", OpeningTime.when(at));
+            return;
+        }
+        if (!live.gate().schedule(dimension, at)) {
+            live.messages().send(sender, "worldgate.could-not-save");
+            return;
+        }
+        live.messages().send(sender, "worldgate.now-scheduled",
+                "dimension", dimension.label(), "when", OpeningTime.when(at));
     }
 
     /**

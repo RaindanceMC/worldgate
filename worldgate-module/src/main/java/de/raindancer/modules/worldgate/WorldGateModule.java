@@ -9,13 +9,16 @@ import de.raindancer.modules.api.ModuleInfo;
 import de.raindancer.modules.worldgate.listener.WorldGatePortalListener;
 import de.raindancer.core.ui.messages.Messages;
 import de.raindancer.modules.worldgate.model.Dimension;
-import de.raindancer.modules.worldgate.model.GateState;
+import de.raindancer.modules.worldgate.model.OpeningTime;
+import de.raindancer.core.platform.util.Scheduling;
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import de.raindancer.modules.worldgate.rules.GateRule;
 import de.raindancer.modules.worldgate.service.WorldGateService;
 import de.raindancer.modules.worldgate.store.GateStateStore;
 import de.raindancer.modules.worldgate.util.PermissionNodes;
 import org.bukkit.Server;
 
+import java.time.Instant;
 import java.util.List;
 
 /**
@@ -37,10 +40,12 @@ import java.util.List;
  */
 public final class WorldGateModule implements FlexModule {
 
-    private static final ModuleInfo INFO = ModuleInfo.of("worldgate", "World Gate", "1.5.0")
+    private static final ModuleInfo INFO = ModuleInfo.of("worldgate", "World Gate", "1.6.0")
             .describedAs("Locks, drains or closes the Nether and the End to entry, and evacuates "
                     + "whoever is still inside")
             .by("Raindancer118");
+
+    private static final long OPEN_CHECK_TICKS = 20L * 30;
 
     private LogChannel log;
     private SettingsStore<WorldGateSettings> settings;
@@ -88,10 +93,20 @@ public final class WorldGateModule implements FlexModule {
         Messages messages = context.core().messages();
         context.closeWith(context.core().worldEntryRules().register("worldgate", (player, target) ->
                 gate.refusal(target.getName(), player.hasPermission(PermissionNodes.BYPASS))
-                        .map(state -> messages.prefixed(state == GateState.CLOSED
-                                        ? "worldgate.closed-entry-denied" : "worldgate.drained-entry-denied",
-                                "dimension", gate.dimensionOf(target.getName())
-                                        .map(Dimension::label).orElse(target.getName())))));
+                        .flatMap(state -> gate.dimensionOf(target.getName())
+                                .map(dimension -> gate.refusalLine(dimension, state, Instant.now())))
+                        .map(line -> messages.prefixed(line.key(), line.values()))));
+
+        // A scheduled opening (a launch keeping the Nether shut for a few days) happens here, on the
+        // first check after its time, so one missed while the server was down is not missed for good.
+        ScheduledTask opener = Scheduling.globalTimer(context.plugin(), 20L, OPEN_CHECK_TICKS, task -> {
+            for (Dimension opened : gate.openDue(Instant.now())) {
+                log.info("{} opened as scheduled.", opened.label());
+                server.getOnlinePlayers().forEach(player ->
+                        messages.send(player, "worldgate.opened-now", "dimension", opened.label()));
+            }
+        });
+        context.closeWith(opener::cancel);
 
         WorldGateServices services = new WorldGateServices(context.plugin(), server, log,
                 context.core().messages(), context.chat().brand(), settings::current, settings, gate);
@@ -100,8 +115,13 @@ public final class WorldGateModule implements FlexModule {
         // answering "not started yet" until now. See WorldGateCommands.
         WorldGateCommands.ready(services);
 
-        log.info("World Gate is up: the Nether is {}, the End is {}.",
-                gate.state(Dimension.NETHER), gate.state(Dimension.END));
+        log.info("World Gate is up: the Nether is {}{}, the End is {}{}.",
+                gate.state(Dimension.NETHER), opening(Dimension.NETHER),
+                gate.state(Dimension.END), opening(Dimension.END));
+    }
+
+    private String opening(Dimension dimension) {
+        return gate.opensAt(dimension).map(at -> " until " + OpeningTime.when(at)).orElse("");
     }
 
     @Override

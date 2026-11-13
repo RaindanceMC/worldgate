@@ -66,9 +66,8 @@ public final class WorldGatePortalListener implements IWorldGateListener {
             return;
         }
         event.setCancelled(true);
-        messages.send(player, state == GateState.CLOSED
-                        ? "worldgate.closed-entry-denied" : "worldgate.drained-entry-denied",
-                "dimension", entering.label());
+        WorldGateService.Refusal line = service.refusalLine(entering, state, java.time.Instant.now());
+        messages.send(player, line.key(), line.values());
     }
 
     private static String worldNameOf(Location location) {

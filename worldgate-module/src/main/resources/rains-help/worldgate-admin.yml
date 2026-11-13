@@ -9,7 +9,7 @@ order: 60
 module: worldgate
 permission: rainsworldgate.admin
 aliases: [lock-nether, lock-end, evacuate]
-keywords: [lock, drain, close, open, evacuate, bypass, nether, end, reset]
+keywords: [lock, drain, close, open, schedule, launch, evacuate, bypass, nether, end, reset]
 related: [worldgate]
 sections:
   - question: What states are there?
@@ -22,6 +22,11 @@ sections:
       {cmd:/worldgate lock <nether|end> <drain|close>} locks one dimension.
       {cmd:/worldgate open <nether|end>} opens it again.
       {cmd:/worldgate status} shows both. If the state cannot be written to disk, nothing changes and you are told so — the server never claims a lock that a restart would forget.
+  - question: How do I open one at a set time?
+    title: Scheduled opening
+    text: |
+      {cmd:/worldgate schedule <nether|end> <time>} closes it now and opens it by itself at that time, written like <white>2026-11-24T16:00</white> (German time). Players turned away are told when it opens; when it does, everybody online hears so. A server that was down at the time opens it within half a minute of starting.
+      Opening or locking it by hand cancels the schedule.
   - question: How do I clear everybody out?
     title: Evacuating
     text: |

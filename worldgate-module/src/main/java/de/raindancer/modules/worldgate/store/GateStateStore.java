@@ -6,9 +6,12 @@ import de.raindancer.core.platform.log.LogChannel;
 import de.raindancer.modules.worldgate.model.Dimension;
 import de.raindancer.modules.worldgate.model.GateState;
 import de.raindancer.modules.worldgate.model.GateStates;
+import de.raindancer.modules.worldgate.model.OpeningTime;
+import de.raindancer.modules.worldgate.model.Openings;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.Locale;
 
 /**
@@ -54,15 +57,40 @@ public final class GateStateStore {
         return new GateStates(nether, end);
     }
 
-    /** Writes both. @return whether it reached the disk */
+    /** When each dimension opens by itself. An unreadable time is no schedule; the lock stays as written. */
+    public Openings loadOpenings() {
+        YamlConfiguration yaml = store.read();
+        return new Openings(readTime(yaml.getString("nether-opens-at"), Dimension.NETHER),
+                readTime(yaml.getString("end-opens-at"), Dimension.END));
+    }
+
+    /** Writes both states and keeps whatever openings are on disk. @return whether it reached the disk */
     public boolean save(GateStates states) {
-        if (states == null) {
+        return save(states, loadOpenings());
+    }
+
+    /** Writes everything. @return whether it reached the disk */
+    public boolean save(GateStates states, Openings openings) {
+        if (states == null || openings == null) {
             return false;
         }
         return store.write(yaml -> {
             yaml.set("nether", states.nether().name());
             yaml.set("end", states.end().name());
+            yaml.set("nether-opens-at", openings.nether() == null ? null : openings.nether().toString());
+            yaml.set("end-opens-at", openings.end() == null ? null : openings.end().toString());
         });
+    }
+
+    private static Instant readTime(String text, Dimension dimension) {
+        if (text == null || text.isBlank()) {
+            return null;
+        }
+        Instant at = OpeningTime.parse(text).orElse(null);
+        if (at == null) {
+            log.warn("'{}' is not a time for {} to open, so nothing is scheduled.", text, dimension.label());
+        }
+        return at;
     }
 
     private static GateState read(String text, Dimension dimension) {

@@ -6,6 +6,9 @@ import de.raindancer.modules.worldgate.WorldGateSettings;
 import de.raindancer.modules.worldgate.model.Dimension;
 import de.raindancer.modules.worldgate.model.GateState;
 import de.raindancer.modules.worldgate.model.GateStates;
+import de.raindancer.modules.worldgate.model.OpeningTime;
+import de.raindancer.modules.worldgate.model.Openings;
+import de.raindancer.core.world.time.Times;
 import de.raindancer.modules.worldgate.rules.GateRule;
 import de.raindancer.modules.worldgate.store.GateStateStore;
 import org.bukkit.Location;
@@ -13,6 +16,8 @@ import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -41,6 +46,7 @@ public final class WorldGateService implements IWorldGateService {
     private final Messages messages;
 
     private volatile GateStates states = GateStates.ALL_OPEN;
+    private volatile Openings openings = Openings.NONE;
     private volatile WorldGateSettings settings;
 
     public WorldGateService(GateStateStore store, LogChannel log, Messages messages,
@@ -54,6 +60,7 @@ public final class WorldGateService implements IWorldGateService {
     /** Reads whatever was on disk last time the server stopped. Called once, from {@code enable}. */
     public void load() {
         states = store.load();
+        openings = store.loadOpenings();
     }
 
     @Override
@@ -76,11 +83,37 @@ public final class WorldGateService implements IWorldGateService {
      * write, so a command that could not save does not tell a player something is closed when the
      * server would forget that on the next restart
      */
-    public boolean set(Dimension dimension, GateState state) {
-        GateStates updated = states.with(dimension, state);
-        boolean written = store.save(updated);
+    public synchronized boolean set(Dimension dimension, GateState state) {
+        // Changed by hand, the schedule is over: otherwise a dimension locked again would reopen at the old time.
+        return write(dimension, states.with(dimension, state), openings.with(dimension, null));
+    }
+
+    /** Closes a dimension now and opens it by itself at {@code at}. @return whether it reached disk */
+    public synchronized boolean schedule(Dimension dimension, Instant at) {
+        return write(dimension, states.with(dimension, GateState.CLOSED), openings.with(dimension, at));
+    }
+
+    public Optional<Instant> opensAt(Dimension dimension) {
+        return openings.of(dimension);
+    }
+
+    /** Opens every dimension whose time has come — also one missed while the server was down. */
+    public synchronized List<Dimension> openDue(Instant now) {
+        List<Dimension> opened = new ArrayList<>();
+        for (Dimension dimension : Dimension.values()) {
+            Optional<Instant> at = openings.of(dimension);
+            if (at.isPresent() && !now.isBefore(at.get()) && set(dimension, GateState.OPEN)) {
+                opened.add(dimension);
+            }
+        }
+        return opened;
+    }
+
+    private synchronized boolean write(Dimension dimension, GateStates updated, Openings updatedOpenings) {
+        boolean written = store.save(updated, updatedOpenings);
         if (written) {
             states = updated;
+            openings = updatedOpenings;
         } else {
             log.error("Could not write {}'s new state to disk, so it is left as {}.",
                     dimension.label(), states.of(dimension));
@@ -113,6 +146,21 @@ public final class WorldGateService implements IWorldGateService {
         }
         GateState current = state(dimension.get());
         return RULE.allowed(current, true, hasBypass) ? Optional.empty() : Optional.of(current);
+    }
+
+    /** The line that turns somebody away, and what it needs filled in. */
+    public record Refusal(String key, Object[] values) {
+    }
+
+    /** What a player is told when {@code state} keeps them out of {@code dimension}: when it opens, if it does. */
+    public Refusal refusalLine(Dimension dimension, GateState state, Instant now) {
+        Optional<Instant> at = state == GateState.CLOSED ? opensAt(dimension) : Optional.empty();
+        if (at.isPresent()) {
+            return new Refusal("worldgate.opens-entry-denied", new Object[]{"dimension", dimension.label(),
+                    "when", OpeningTime.when(at.get()), "remaining", Times.describe(Duration.between(now, at.get()))});
+        }
+        return new Refusal(state == GateState.CLOSED ? "worldgate.closed-entry-denied" : "worldgate.drained-entry-denied",
+                new Object[]{"dimension", dimension.label()});
     }
 
     /** Which world this dimension currently is, from the live settings. */
