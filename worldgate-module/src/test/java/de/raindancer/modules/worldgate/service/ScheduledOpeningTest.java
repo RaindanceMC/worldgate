@@ -62,6 +62,8 @@ class ScheduledOpeningTest {
         service.schedule(Dimension.NETHER, NETHER_OPENS);
         service.schedule(Dimension.END, NETHER_OPENS.plusSeconds(4 * 86_400));
 
+        assertThat(service.anyDue(NETHER_OPENS.minusSeconds(1))).isFalse();
+        assertThat(service.anyDue(NETHER_OPENS)).isTrue();
         assertThat(service.openDue(NETHER_OPENS.minusSeconds(1))).isEmpty();
         assertThat(service.state(Dimension.NETHER)).isEqualTo(GateState.CLOSED);
 

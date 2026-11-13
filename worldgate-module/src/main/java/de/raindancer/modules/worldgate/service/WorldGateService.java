@@ -97,6 +97,17 @@ public final class WorldGateService implements IWorldGateService {
         return openings.of(dimension);
     }
 
+    /** Whether an opening is due, from memory alone — cheap enough to ask every tick. */
+    public boolean anyDue(Instant now) {
+        Openings current = openings;
+        for (Dimension dimension : Dimension.values()) {
+            if (current.of(dimension).filter(at -> !now.isBefore(at)).isPresent()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /** Opens every dimension whose time has come — also one missed while the server was down. */
     public synchronized List<Dimension> openDue(Instant now) {
         List<Dimension> opened = new ArrayList<>();

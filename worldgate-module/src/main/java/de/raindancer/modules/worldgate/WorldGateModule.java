@@ -40,7 +40,7 @@ import java.util.List;
  */
 public final class WorldGateModule implements FlexModule {
 
-    private static final ModuleInfo INFO = ModuleInfo.of("worldgate", "World Gate", "1.6.0")
+    private static final ModuleInfo INFO = ModuleInfo.of("worldgate", "World Gate", "1.6.1")
             .describedAs("Locks, drains or closes the Nether and the End to entry, and evacuates "
                     + "whoever is still inside")
             .by("Raindancer118");
@@ -99,12 +99,18 @@ public final class WorldGateModule implements FlexModule {
 
         // A scheduled opening (a launch keeping the Nether shut for a few days) happens here, on the
         // first check after its time, so one missed while the server was down is not missed for good.
+        // The write goes to the database, so it is done off the world's thread; only the cheap check runs on it.
         ScheduledTask opener = Scheduling.globalTimer(context.plugin(), 20L, OPEN_CHECK_TICKS, task -> {
-            for (Dimension opened : gate.openDue(Instant.now())) {
-                log.info("{} opened as scheduled.", opened.label());
-                server.getOnlinePlayers().forEach(player ->
-                        messages.send(player, "worldgate.opened-now", "dimension", opened.label()));
+            Instant now = Instant.now();
+            if (!gate.anyDue(now)) {
+                return;
             }
+            Scheduling.async(context.plugin(), () -> {
+                List<Dimension> opened = gate.openDue(now);
+                if (!opened.isEmpty()) {
+                    Scheduling.global(context.plugin(), () -> announce(server, messages, opened));
+                }
+            });
         });
         context.closeWith(opener::cancel);
 
@@ -118,6 +124,14 @@ public final class WorldGateModule implements FlexModule {
         log.info("World Gate is up: the Nether is {}{}, the End is {}{}.",
                 gate.state(Dimension.NETHER), opening(Dimension.NETHER),
                 gate.state(Dimension.END), opening(Dimension.END));
+    }
+
+    private void announce(Server server, Messages messages, List<Dimension> opened) {
+        for (Dimension dimension : opened) {
+            log.info("{} opened as scheduled.", dimension.label());
+            server.getOnlinePlayers().forEach(player ->
+                    messages.send(player, "worldgate.opened-now", "dimension", dimension.label()));
+        }
     }
 
     private String opening(Dimension dimension) {
