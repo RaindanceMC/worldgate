@@ -1,8 +1,8 @@
 id: worldgate-admin
 title: Locking the Nether and the End
-summary: Staff — lock, drain, close, open and evacuate a dimension, and who may walk through anyway.
+summary: "Staff: lock, drain, close, open and evacuate a dimension, and who may walk through anyway."
 intro: |
-  Staff business. Three states per dimension, one command, and no surprises — I am rather proud of that last part.
+  For staff. Each dimension has three states and one command.
 icon: OBSIDIAN
 category: Staff
 order: 60
@@ -15,23 +15,23 @@ sections:
   - question: What states are there?
     title: States
     text: |
-      <white>OPEN</white>: normal. <white>DRAINED</white>: no new arrivals, players inside may leave — for winding down before a reset. <white>CLOSED</white>: same rule, but the message tells players it is closed for good. The state is saved at once and survives restarts.
+      <white>OPEN</white>: normal. <white>DRAINED</white>: no new arrivals, players inside may leave. Use it to wind down before a reset. <white>CLOSED</white>: same rule, but the message tells players it is closed for good. The state is saved at once and survives restarts.
   - question: How do I lock or open one?
     title: Lock and open
     text: |
       {cmd:/worldgate lock <nether|end> <drain|close>} locks one dimension.
       {cmd:/worldgate open <nether|end>} opens it again.
-      {cmd:/worldgate status} shows both. If the state cannot be written to disk, nothing changes and you are told so — the server never claims a lock that a restart would forget.
+      {cmd:/worldgate status} shows both. If the state cannot be written to disk, nothing changes and you are told so. The server never claims a lock that a restart would forget.
   - question: How do I open one at a set time?
     title: Scheduled opening
     text: |
-      {cmd:/worldgate schedule <nether|end> <time>} closes it now and opens it by itself at that time, written like <white>2026-11-24T16:00</white> (German time). Players turned away are told when it opens. Everybody online gets a countdown: a reminder a day, an hour, ten and one minute before, a boss bar for the last ten minutes, the last ten seconds as a title, and a title with a fanfare when it opens. A server that was down at the time opens it within half a minute of starting.
+      {cmd:/worldgate schedule <nether|end> <time>} closes it now and opens it by itself at that time, written like <white>2026-11-24T16:00</white> (German time). Players turned away are told when it opens. Everybody online gets a countdown: a reminder one day, one hour, ten minutes and one minute before, a boss bar for the last ten minutes, the last ten seconds as a title, and a title with a fanfare when it opens. A server that was down at the time opens it within half a minute of starting.
       Opening or locking it by hand cancels the schedule.
   - question: How do I clear everybody out?
     title: Evacuating
     text: |
       {cmd:/worldgate evacuate <nether|end>} pulls every player in that dimension back to the overworld ({setting:worldgate:overworld-world}) and replies with how many were moved. Players go to their own respawn point if it lies in the overworld, otherwise to its spawn.
-      Locking and evacuating are two separate commands on purpose: locking moves nobody, evacuating locks nothing. Want both? Run both.
+      Locking and evacuating are separate commands: locking moves nobody, evacuating locks nothing. To do both, run both.
   - question: Who walks through a locked door?
     title: Bypass
     text: |
@@ -39,4 +39,4 @@ sections:
   - question: Which worlds does it guard?
     title: World names
     text: |
-      By the names in the settings: Nether <white>{setting:worldgate:nether-world}</white>, End <white>{setting:worldgate:end-world}</white>, evacuation target <white>{setting:worldgate:overworld-world}</white>. Change them in {run:/settings} on a server that renamed its worlds. Any other world and portal is left strictly alone.
+      By the names in the settings: Nether <white>{setting:worldgate:nether-world}</white>, End <white>{setting:worldgate:end-world}</white>, evacuation target <white>{setting:worldgate:overworld-world}</white>. Change them in {run:/settings} on a server that renamed its worlds. Any other world and portal is left alone.
