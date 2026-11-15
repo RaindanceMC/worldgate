@@ -1,4 +1,4 @@
-# Rain's World Gate — every line this module says.
+# Rain's World Gate: every line this module says.
 #
 # Offered as a *floor*: anything an owner has already written in their own messages.yml wins, and so
 # does a host's bundled wording. See Messages.defineFrom.
@@ -13,12 +13,12 @@
 #     message that has become one prints its own key to somebody's face.
 worldgate:
 
-  drained-entry-denied: "<yellow><white><dimension></white> is being drained right now, so nobody new may enter. Come back later."
+  drained-entry-denied: "<yellow><white><dimension></white> is draining. Nobody new may enter. Come back later."
   closed-entry-denied: "<red><white><dimension></white> is closed on this server."
   opens-entry-denied: "<dimension> <gray>opens on <white><when></white>, in <white><remaining></white>."
-  opened-now: "<dimension> <gray>is open now. Off you go!"
+  opened-now: "<dimension> <gray>is open now."
   opened-title: "<bold><dimension></bold>"
-  opened-subtitle: "<gray>is open now. Off you go!"
+  opened-subtitle: "<gray>is open now."
   now-playing: "<gray>♪ <white><title></white> <dark_gray>·</dark_gray> <gray><by>"
   countdown-reminder: "<dimension> <gray>opens in <white><remaining></white>, on <white><when></white>."
   countdown-bar: "<dimension> <gray>opens in <white><bold><clock></bold></white>"
@@ -26,14 +26,14 @@ worldgate:
   countdown-subtitle: "<dimension> <gray>opens in"
   evacuate-notice: "<yellow>You have been pulled out of <white><dimension></white>."
 
-  no-permission: "<red>You may not lock, open or evacuate a dimension. That is staff business."
-  unknown-dimension: "<red><white><value></white> is not nether or end. Pick one of those."
+  no-permission: "<red>Only staff can lock, open or evacuate a dimension."
+  unknown-dimension: "<red><white><value></white> is not nether or end."
   unknown-time: "<red><white><value></white> is not a time. Write it like 2026-11-24T16:00 (German time)."
-  time-passed: "<red><white><when></white> has already passed. To open it now, use /worldgate open."
-  unknown-lock-mode: "<red><white><value></white> is not drain or close. Pick one of those."
-  could-not-save: "<red>That could not be written to disk, so nothing has changed."
+  time-passed: "<red><white><when></white> has already passed. Use /worldgate open to open it now."
+  unknown-lock-mode: "<red><white><value></white> is not drain or close."
+  could-not-save: "<red>The state could not be saved, so nothing has changed."
 
-  now-drained: "<yellow><white><dimension></white> is now draining. Nobody new may enter, and whoever is already there may still leave freely."
+  now-drained: "<yellow><white><dimension></white> is now draining. Nobody new may enter. Players inside may still leave."
   now-closed: "<red><white><dimension></white> is now closed."
   now-open: "<green><white><dimension></white> is open again."
   now-scheduled: "<yellow><white><dimension></white> is closed now and opens by itself on <white><when></white>."
@@ -50,8 +50,8 @@ worldgate:
     evacuate: "<yellow>Usage: /worldgate evacuate (nether or end)"
 
   help:
-    - "<gray>/worldgate status — both dimensions' current state"
-    - "<gray>/worldgate lock (nether or end) (drain or close) — stop new arrivals"
-    - "<gray>/worldgate open (nether or end) — let people back in"
-    - "<gray>/worldgate schedule (nether or end) (time) — close it now, open it by itself then"
-    - "<gray>/worldgate evacuate (nether or end) — pull everybody there back to the overworld"
+    - "<gray>/worldgate status: both dimensions' current state"
+    - "<gray>/worldgate lock (nether or end) (drain or close): stop new arrivals"
+    - "<gray>/worldgate open (nether or end): let people back in"
+    - "<gray>/worldgate schedule (nether or end) (time): close it now, open it by itself then"
+    - "<gray>/worldgate evacuate (nether or end): pull everybody there back to the overworld"
