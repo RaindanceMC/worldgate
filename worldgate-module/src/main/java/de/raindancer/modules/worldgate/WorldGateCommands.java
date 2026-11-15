@@ -36,10 +36,10 @@ public final class WorldGateCommands {
                 ModuleCommand.of("worldgate", "Lock, drain, close or evacuate the Nether and the End",
                                 new WorldGateCommand(WorldGateCommands::require))
                         .aliased("wgate", "dimensions")
-                        .taking("status — both dimensions' current state",
-                                "lock <nether|end> <drain|close> — stop new arrivals",
-                                "open <nether|end> — let people back in",
-                                "evacuate <nether|end> — pull everybody there back to the overworld")
+                        .taking("status: both dimensions' current state",
+                                "lock <nether|end> <drain|close>: stop new arrivals",
+                                "open <nether|end>: let people back in",
+                                "evacuate <nether|end>: pull everybody there back to the overworld")
                         .needing(PermissionNodes.STATUS));
     }
 

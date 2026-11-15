@@ -36,7 +36,7 @@ public record WorldGateSettings(
 
         @In("worldgate") @Title("The overworld's world name")
         @Describe("Where an evacuated player lands. A player's own respawn point is used first, but "
-                + "only when it is actually in this world — a bed set in the Nether would otherwise "
+                + "only when it is actually in this world. A bed set in the Nether would otherwise "
                 + "send them right back into the dimension they were just pulled out of.")
         @Key("overworld-world")
         String overworldWorld) {
